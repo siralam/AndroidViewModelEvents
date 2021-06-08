@@ -8,6 +8,7 @@ import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 class MainFragment : Fragment() {
 
     private val vm: MainViewModel by viewModels()
+    private var job: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,10 +32,18 @@ class MainFragment : Fragment() {
         btnCallApi.setOnClickListener {
             vm.callSomeApi()
         }
+    }
 
-        vm.apiResponse.receiveAsFlow().onEach {
+    override fun onStart() {
+        super.onStart()
+        job = vm.apiResponse.receiveAsFlow().onEach {
             showDialog(it)
         }.launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        job?.cancel()
     }
 
     private fun showDialog(message: String) {
