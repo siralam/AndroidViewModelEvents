@@ -8,7 +8,7 @@ import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 
-class MainFragment: Fragment() {
+class MainFragment : Fragment() {
 
     private val vm: MainViewModel by viewModels()
 
@@ -27,10 +27,8 @@ class MainFragment: Fragment() {
             vm.callSomeApi()
         }
 
-        vm.apiResponse.observe(viewLifecycleOwner) { event ->
-            event.getContentIfNotHandled()?.let {
-                showDialog(it)
-            }
+        vm.apiResponse.observeEvent(viewLifecycleOwner) {
+            showDialog(it)
         }
     }
 
