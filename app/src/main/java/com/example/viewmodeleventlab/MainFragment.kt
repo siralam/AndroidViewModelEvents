@@ -27,8 +27,8 @@ class MainFragment: Fragment() {
             vm.callSomeApi()
         }
 
-        vm.apiResponse.observe(viewLifecycleOwner) {
-            if (!it.isNullOrBlank()) {
+        vm.apiResponse.observe(viewLifecycleOwner) { event ->
+            event.getContentIfNotHandled()?.let {
                 showDialog(it)
             }
         }

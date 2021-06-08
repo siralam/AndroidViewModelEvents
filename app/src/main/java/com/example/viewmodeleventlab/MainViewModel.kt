@@ -9,12 +9,12 @@ import kotlinx.coroutines.launch
 
 class MainViewModel: ViewModel() {
 
-    val apiResponse = MutableLiveData<String?>(null)
+    val apiResponse = MutableLiveData<Event<String>>()
 
     fun callSomeApi() {
         viewModelScope.launch {
             delay(3000)
-            apiResponse.value = "I am some response"
+            apiResponse.value = Event("I am some response")
         }
     }
 }
