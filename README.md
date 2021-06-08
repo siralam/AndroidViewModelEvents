@@ -194,5 +194,27 @@ If you don't want to lose any event, use `Channel`.
 
 ## Bonus: Replace LiveData with StateFlow
 
-Actually Google suggests us to use `Flow` instead of `LiveData` if you are developing a Kotlin project. It is actually easy to migrate.
+Actually Google suggests us to use `Flow` instead of `LiveData` if you are developing a Kotlin project. It is actually easy to migrate for simple cases.
 
+### Replace LiveData with StateFlow, needs an initial value
+```kotlin
+    val apiResponse = MutableStateFlow<Event<String?>>(Event(null))
+
+    fun callSomeApi() {
+        viewModelScope.launch {
+            delay(3000)
+            apiResponse.value = Event("I am some response")
+        }
+    }
+```
+
+### Consume using launchWhenStarted and collect { }
+```kotlin
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            vm.apiResponse.collect { event ->
+                event.getContentIfNotHandled()?.let { showDialog(it) }
+            }
+        }
+```
+
+That's all!
