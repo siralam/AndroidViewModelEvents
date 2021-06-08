@@ -29,7 +29,7 @@ class MainFragment : Fragment() {
         btnCallApi.setOnClickListener {
             vm.callSomeApi()
         }
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+        viewLifecycleOwner.lifecycleScope.launchWhenResumed {
             vm.apiResponse.receiveAsFlow().collect {
                 showDialog(it)
             }

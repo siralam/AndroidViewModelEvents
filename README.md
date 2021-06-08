@@ -173,66 +173,26 @@ And if you use `Channel`, you will have to handle this by yourself! Otherwise yo
 
 ## OMG... This is so troublesome!
 
-Yes, I agree. So let's make an extension for it.
+Yes, I agree. But we have the `launchWhenResumed { }` extension to use:
 
 ```kotlin
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
-
-class OnStartFlowObserver<T> (
-    lifecycleOwner: LifecycleOwner,
-    private val flow: Flow<T>,
-    private val collector: suspend (T) -> Unit
-) {
-    private var job: Job? = null
-    init {
-        lifecycleOwner.lifecycle.addObserver(
-            LifecycleEventObserver {
-                    source: LifecycleOwner, event: Lifecycle.Event ->
-                when (event) {
-                    Lifecycle.Event.ON_START -> {
-                        job = source.lifecycleScope.launch {
-                            flow.collect { collector(it) }
-                        }
-                    }
-                    Lifecycle.Event.ON_STOP -> {
-                        job?.cancel()
-                        job = null
-                    }
-                    else -> { }
-                }
+        viewLifecycleOwner.lifecycleScope.launchWhenResumed {
+            vm.apiResponse.receiveAsFlow().collect {
+                showDialog(it)
             }
-        )
-    }
-}
-
-inline fun <reified T> Flow<T>.observeOnStart(
-    lifecycleOwner: LifecycleOwner,
-    noinline collector: suspend (T) -> Unit
-) = OnStartFlowObserver(lifecycleOwner, this, collector)
-inline fun <reified T> Flow<T>.observeOnStart(
-    lifecycleOwner: LifecycleOwner
-) = OnStartFlowObserver(lifecycleOwner, this, {})
+        }
 ```
 
-Usage:
-```kotlin
-        vm.apiResponse.receiveAsFlow().onEach {
-            showDialog(it)
-        }.observeOnStart(viewLifecycleOwner)
-```
+Now, if you have already read the article [Android SingleLiveEvent Redux with Kotlin Flow](https://proandroiddev.com/android-singleliveevent-redux-with-kotlin-flow-b755c70bb055), you may notice that the author is discouraging the use of `launchWhenXXXX`. But I think the reason is way to subtle to introduce a custom observer just for that scenario.
 
-And now you don't need to place it in `onStart()` as well. 
+What he is saying is basically, if you use `launchWhenResumed`, events will be dropped between RESUMED state and DESTROYED state because the job will be cancelled in DESTROYED state instead of PAUSED state. But the time between these 2 events are basically negligible, and when I test configuration changes I don't encounter any loss of event at all. To be honest I doubt you can only observe this behaviour only when you explicitly log the STOP event. So I think introducing a new observer is over-engineering.
 
 ## TDLR;
 
 If you only want the latest event, use `LiveData<Event>`.  
 If you don't want to lose any event, use `Channel`.
 
-(But, actually Google suggests us to use `Flow` instead of `LiveData` if you are developing a Kotlin project.)
+## Bonus: Replace LiveData with StateFlow
+
+Actually Google suggests us to use `Flow` instead of `LiveData` if you are developing a Kotlin project. It is actually easy to migrate.
+
