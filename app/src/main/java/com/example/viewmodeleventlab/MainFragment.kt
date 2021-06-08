@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.collect
 
 class MainFragment: Fragment() {
 
@@ -27,9 +29,9 @@ class MainFragment: Fragment() {
             vm.callSomeApi()
         }
 
-        vm.apiResponse.observe(viewLifecycleOwner) { event ->
-            event.getContentIfNotHandled()?.let {
-                showDialog(it)
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            vm.apiResponse.collect { event ->
+                event.getContentIfNotHandled()?.let { showDialog(it) }
             }
         }
     }

@@ -1,15 +1,14 @@
 package com.example.viewmodeleventlab
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel: ViewModel() {
 
-    val apiResponse = MutableLiveData<Event<String>>()
+    val apiResponse = MutableStateFlow<Event<String?>>(Event(null))
 
     fun callSomeApi() {
         viewModelScope.launch {
