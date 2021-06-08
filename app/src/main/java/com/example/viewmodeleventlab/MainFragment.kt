@@ -7,7 +7,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import kotlinx.coroutines.flow.onEach
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
 
 class MainFragment : Fragment() {
@@ -28,9 +29,11 @@ class MainFragment : Fragment() {
         btnCallApi.setOnClickListener {
             vm.callSomeApi()
         }
-        vm.apiResponse.receiveAsFlow().onEach {
-            showDialog(it)
-        }.observeOnStart(viewLifecycleOwner)
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            vm.apiResponse.receiveAsFlow().collect {
+                showDialog(it)
+            }
+        }
     }
 
     private fun showDialog(message: String) {
